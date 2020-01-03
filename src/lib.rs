@@ -32,7 +32,9 @@ pub fn spandoc(args: TokenStream, item: TokenStream) -> TokenStream {
 struct SpanInstrumentedExpressions;
 
 impl Fold for SpanInstrumentedExpressions {
-    fn fold_block(&mut self, mut block: Block) -> Block {
+    fn fold_block(&mut self, block: Block) -> Block {
+        let mut block = syn::fold::fold_block(self, block);
+
         let stmts = block.stmts;
         let mut new_stmts = vec![];
 

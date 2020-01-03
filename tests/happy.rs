@@ -7,6 +7,12 @@ use tracing_subscriber::{fmt::FmtLayer, layer::Layer, registry::Registry, EnvFil
 fn spanned() {
     /// Setting a to 1
     let _a = eventful();
+
+    /// Doing something in a block
+    {
+        /// Seriously, I'm gonna do it!
+        let _b = eventful();
+    }
 }
 
 #[instrument]
