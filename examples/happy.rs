@@ -7,19 +7,19 @@ use tracing_subscriber::{layer::Layer, registry::Registry, EnvFilter};
 
 #[spandoc]
 fn spanned() -> Context {
-    /// Setting a to 1
-    let _a = eventful();
+    /// Doing first grab of context
+    let _a = get_context();
 
-    /// Doing something in a block
+    /// Getting context from inside a block
     {
-        /// Seriously, I'm gonna do it!
-        eventful()
+        get_context()
     }
 }
 
 #[instrument]
-fn eventful() -> Context {
-    /// so much to do, so little time
+#[spandoc]
+fn get_context() -> Context {
+    /// Capturing context
     let ctx = Context::current().unwrap();
 
     println!("Context:");
@@ -41,6 +41,7 @@ fn main() {
 
     let ctx = spanned();
 
+    println!("Printing Context again");
     println!("Context:");
     println!("{}", ctx.span_backtrace());
 }
