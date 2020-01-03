@@ -1,39 +1,46 @@
+#![allow(unused_doc_comments)]
+
 use spandoc::spandoc;
-use tracing::{info, instrument};
-use tracing_error::ErrorLayer;
-use tracing_subscriber::{fmt::FmtLayer, layer::Layer, registry::Registry, EnvFilter};
+use tracing::instrument;
+use tracing_error::{Context, ErrorLayer};
+use tracing_subscriber::{layer::Layer, registry::Registry, EnvFilter};
 
 #[spandoc]
-fn spanned() {
+fn spanned() -> Context {
     /// Setting a to 1
     let _a = eventful();
 
     /// Doing something in a block
     {
         /// Seriously, I'm gonna do it!
-        let _b = eventful();
+        eventful()
     }
 }
 
 #[instrument]
-fn eventful() -> i32 {
+fn eventful() -> Context {
     /// so much to do, so little time
-    info!("doing the thing!");
-    42
+    let ctx = Context::current().unwrap();
+
+    println!("Context:");
+    println!("{}\n", ctx.span_backtrace());
+
+    ctx
 }
 
-#[test]
-fn happy() {
+fn main() {
     let filter = EnvFilter::try_from_default_env()
         .or_else(|_| EnvFilter::try_new("info"))
         .unwrap();
 
     let subscriber = ErrorLayer::default()
-        .and_then(FmtLayer::builder().with_target(false).finish())
         .and_then(filter)
         .with_subscriber(Registry::default());
 
     tracing::subscriber::set_global_default(subscriber).expect("Could not set global default");
 
-    spanned();
+    let ctx = spanned();
+
+    println!("Context:");
+    println!("{}", ctx.span_backtrace());
 }

@@ -27,7 +27,7 @@ quote = "1.0"
 proc-macro2 = "1.0"
 matches = "0.1.8"
 
-[dev-dependencies]
+# [dev-dependencies]
 tracing = { git = "https://github.com/yaahc/tokio-trace-nursery.git", branch = "eliza/error-sketch" }
 tracing-subscriber = { git = "https://github.com/yaahc/tokio-trace-nursery.git", branch = "eliza/error-sketch" }
 tracing-error = { git = "https://github.com/yaahc/tokio-trace-nursery.git", branch = "eliza/error-sketch" }
