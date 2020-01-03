@@ -27,6 +27,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "spandoc"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2 1.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quote 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn 1.0.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tracing 0.1.11 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "syn"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -44,15 +54,6 @@ dependencies = [
  "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing-attributes 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing-core 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "tracing-attributes"
-version = "0.1.5"
-dependencies = [
- "quote 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "syn 1.0.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "tracing 0.1.11 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
