@@ -2,7 +2,7 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{fold::Fold, AttributeArgs, Block, ItemFn};
+use syn::{fold::Fold, parse_quote, AttributeArgs, Block, ItemFn, Stmt};
 
 #[proc_macro_attribute]
 pub fn spandoc(args: TokenStream, item: TokenStream) -> TokenStream {
@@ -33,7 +33,7 @@ struct SpanInstrumentedExpressions;
 impl Fold for SpanInstrumentedExpressions {
     fn fold_block(&mut self, mut block: Block) -> Block {
         let stmts = block.stmts;
-        let mut new_stmts = proc_macro2::TokenStream::new();
+        let mut new_stmts = vec![];
 
         for mut stmt in stmts {
             let doc_attr = match &mut stmt {
@@ -45,9 +45,9 @@ impl Fold for SpanInstrumentedExpressions {
 
             let span = doc_attr.and_then(attr::as_span);
 
-            let stmts = match span {
+            let stmts: Vec<Stmt> = match span {
                 Some(span) => {
-                    quote! {
+                    parse_quote! {
                         let __dummy_span = #span;
                         let __dummy_span_guard = __dummy_span.enter();
                         #stmt
@@ -56,20 +56,13 @@ impl Fold for SpanInstrumentedExpressions {
                         panic!("WOO");
                     }
                 }
-                _ => quote! { #stmt },
+                _ => parse_quote! { #stmt },
             };
 
             new_stmts.extend(stmts);
         }
 
-        let stmt_block = quote! {
-            {
-                #new_stmts
-            }
-        };
-
-        let new_block: Block = syn::parse(stmt_block.into()).unwrap();
-        block.stmts = new_block.stmts;
+        block.stmts = new_stmts;
         block
     }
 }
