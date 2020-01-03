@@ -25,7 +25,7 @@ pub fn spandoc(args: TokenStream, item: TokenStream) -> TokenStream {
 
     quote_spanned!( span =>
         #(#attrs) *
-        #[allow(unused_doc_comments)]
+        #[allow(clippy::cognitive_complexity)]
         #vis #sig
         #block
     )

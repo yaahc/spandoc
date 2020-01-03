@@ -16,8 +16,8 @@ fn spanned() -> Context {
     }
 }
 
-#[instrument]
 #[spandoc]
+#[instrument]
 fn get_context() -> Context {
     /// Capturing context
     let ctx = Context::current().unwrap();
