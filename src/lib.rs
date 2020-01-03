@@ -2,14 +2,17 @@ extern crate proc_macro;
 
 use matches::matches;
 use proc_macro::TokenStream;
-use quote::quote;
-use syn::{fold::Fold, parse_quote, AttributeArgs, Block, ItemFn, Stmt};
+use quote::quote_spanned;
+use syn::{
+    fold::Fold, spanned::Spanned, Attribute, AttributeArgs, Block, ItemFn, LitStr, Meta, Stmt,
+};
 
 #[proc_macro_attribute]
 pub fn spandoc(args: TokenStream, item: TokenStream) -> TokenStream {
     let input: ItemFn = syn::parse_macro_input!(item as ItemFn);
     let _args = syn::parse_macro_input!(args as AttributeArgs);
 
+    let span = input.span();
     let ItemFn {
         attrs,
         vis,
@@ -20,7 +23,7 @@ pub fn spandoc(args: TokenStream, item: TokenStream) -> TokenStream {
 
     let block = SpanInstrumentedExpressions.fold_block(*block);
 
-    quote!(
+    quote_spanned!( span =>
         #(#attrs) *
         #[allow(unused_doc_comments)]
         #vis #sig
@@ -33,25 +36,45 @@ struct SpanInstrumentedExpressions;
 
 impl Fold for SpanInstrumentedExpressions {
     fn fold_block(&mut self, block: Block) -> Block {
+        let block_span = block.span();
         let mut block = syn::fold::fold_block(self, block);
 
         let stmts = block.stmts;
-        let mut new_stmts = vec![];
+        let mut new_stmts = proc_macro2::TokenStream::new();
 
         for mut stmt in stmts {
-            let attrs = attr::from_stmt(&mut stmt);
-            let span = attrs.and_then(attr::find_doc).and_then(attr::as_span);
+            let stmt_span = stmt.span();
 
-            let stmts: Vec<Stmt> = match span {
+            let as_span = |attr: Attribute| {
+                let meta = attr.parse_meta().ok()?;
+                let lit = match meta {
+                    Meta::NameValue(syn::MetaNameValue {
+                        lit: syn::Lit::Str(lit),
+                        ..
+                    }) => lit,
+                    _ => return None,
+                };
+
+                let lit = LitStr::new(lit.value().trim(), lit.span());
+
+                Some(quote_spanned! { stmt_span =>
+                    tracing::span!(tracing::Level::ERROR, "context", action = %#lit)
+                })
+            };
+
+            let attrs = attr::from_stmt(&mut stmt);
+            let span = attrs.and_then(attr::find_doc).and_then(as_span);
+
+            let stmts = match span {
                 Some(span) if matches!(stmt, Stmt::Expr(..)) => {
-                    parse_quote! {
+                    quote_spanned! { stmt_span =>
                         let __dummy_span = #span;
                         let __dummy_span_guard = __dummy_span.enter();
                         #stmt
                     }
                 }
                 Some(span) => {
-                    parse_quote! {
+                    quote_spanned! { stmt_span =>
                         let __dummy_span = #span;
                         let __dummy_span_guard = __dummy_span.enter();
                         #stmt
@@ -59,20 +82,27 @@ impl Fold for SpanInstrumentedExpressions {
                         drop(__dummy_span);
                     }
                 }
-                _ => parse_quote! { #stmt },
+                _ => quote_spanned! { stmt_span => #stmt },
             };
 
             new_stmts.extend(stmts);
         }
 
-        block.stmts = new_stmts;
+        let new_block = quote_spanned! { block_span =>
+            {
+                #new_stmts
+            }
+        };
+
+        let new_block: Block = syn::parse2(new_block).unwrap();
+
+        block.stmts = new_block.stmts;
         block
     }
 }
 
 mod attr {
-    use quote::{quote, ToTokens};
-    use syn::{Attribute, Expr, LitStr, Meta, Stmt};
+    use syn::{Attribute, Expr, Stmt};
 
     pub(crate) fn from_stmt(stmt: &mut Stmt) -> Option<&mut Vec<Attribute>> {
         match stmt {
@@ -134,20 +164,5 @@ mod attr {
         let ind = attrs.iter().position(|attr| attr.path.is_ident("doc"));
 
         ind.map(|ind| attrs.remove(ind))
-    }
-
-    pub(crate) fn as_span(attr: Attribute) -> Option<impl ToTokens> {
-        let meta = attr.parse_meta().ok()?;
-        let lit = match meta {
-            Meta::NameValue(syn::MetaNameValue {
-                lit: syn::Lit::Str(lit),
-                ..
-            }) => lit,
-            _ => return None,
-        };
-
-        let lit = LitStr::new(lit.value().trim(), lit.span());
-
-        Some(quote! { tracing::span!(tracing::Level::INFO, "context", msg = #lit) })
     }
 }
