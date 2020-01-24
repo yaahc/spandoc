@@ -1,11 +1,8 @@
 extern crate proc_macro;
 
-use matches::matches;
 use proc_macro::TokenStream;
 use quote::quote_spanned;
-use syn::{
-    fold::Fold, spanned::Spanned, Attribute, AttributeArgs, Block, ItemFn, LitStr, Meta, Stmt,
-};
+use syn::{fold::Fold, spanned::Spanned, Attribute, AttributeArgs, Block, ItemFn, LitStr, Meta};
 
 #[proc_macro_attribute]
 pub fn spandoc(args: TokenStream, item: TokenStream) -> TokenStream {
@@ -41,8 +38,9 @@ impl Fold for SpanInstrumentedExpressions {
 
         let stmts = block.stmts;
         let mut new_stmts = proc_macro2::TokenStream::new();
+        let last = stmts.len() - 1;
 
-        for mut stmt in stmts {
+        for (i, mut stmt) in stmts.into_iter().enumerate() {
             let stmt_span = stmt.span();
 
             let as_span = |attr: Attribute| {
@@ -66,7 +64,7 @@ impl Fold for SpanInstrumentedExpressions {
             let span = attrs.and_then(attr::find_doc).and_then(as_span);
 
             let stmts = match span {
-                Some(span) if matches!(stmt, Stmt::Expr(..)) => {
+                Some(span) if i == last => {
                     quote_spanned! { stmt_span =>
                         let __dummy_span = #span;
                         let __dummy_span_guard = __dummy_span.enter();
