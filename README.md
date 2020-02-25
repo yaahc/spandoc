@@ -9,3 +9,5 @@ https://github.com/rust-lang/rust/issues/43081, `#[instrument]` and
 `#[spandoc]` in particiular don't yet get along well. I have observed that
 putting the spandoc attribute above the tracing instrument one can sometimes
 fix broken line numbers. Proc macros /shrug.
+
+testing
