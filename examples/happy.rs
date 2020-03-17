@@ -7,10 +7,12 @@ use tracing_subscriber::{layer::Layer, registry::Registry};
 
 #[spandoc]
 fn spanned() -> SpanTrace {
+    let local = 4;
+
     /// Doing first grab of context
     let _a = get_context();
 
-    /// Getting context from inside a block
+    /// Getting context from inside a block {?local}
     {
         get_context()
     }

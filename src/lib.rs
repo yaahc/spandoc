@@ -226,17 +226,18 @@ mod args {
     pub fn split(lit: LitStr) -> (LitStr, Option<proc_macro2::TokenStream>) {
         let text = lit.value();
         let text = text.trim();
+        let span = lit.span();
 
         if let Some((text_range, args_range)) = get_ranges(text) {
-            let args = &text[args_range].trim();
-            let text = &text[text_range];
-            let span = lit.span();
+            let args = &text[args_range];
+            let text = &text[text_range].trim();
 
             let lit = LitStr::new(text, span);
             let args: proc_macro2::TokenStream = args.parse().unwrap();
 
             (lit, Some(quote_spanned! { span => #args }))
         } else {
+            let lit = LitStr::new(text, span);
             (lit, None)
         }
     }
