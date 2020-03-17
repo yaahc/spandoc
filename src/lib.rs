@@ -3,8 +3,9 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 use quote::quote_spanned;
 use syn::{
-    fold::Fold, spanned::Spanned, Attribute, AttributeArgs, Block, ExprAwait, ItemFn, Meta,
+    fold::Fold, spanned::Spanned, Signature, Attribute, AttributeArgs, Block, ExprAwait, ItemFn, Meta,
 };
+use proc_macro2::Ident;
 
 #[proc_macro_attribute]
 pub fn spandoc(args: TokenStream, item: TokenStream) -> TokenStream {
@@ -20,7 +21,12 @@ pub fn spandoc(args: TokenStream, item: TokenStream) -> TokenStream {
         ..
     } = input;
 
-    let block = SpanInstrumentedExpressions.fold_block(*block);
+    let Signature {
+        ref ident,
+        ..
+    } = sig;
+
+    let block = SpanInstrumentedExpressions{ ident: ident.clone() }.fold_block(*block);
 
     quote_spanned!( span =>
         #(#attrs) *
@@ -30,8 +36,6 @@ pub fn spandoc(args: TokenStream, item: TokenStream) -> TokenStream {
     )
     .into()
 }
-
-struct SpanInstrumentedExpressions;
 
 struct InstrumentAwaits<'a> {
     did_work: &'a mut bool,
@@ -59,6 +63,10 @@ impl Fold for InstrumentAwaits<'_> {
     }
 }
 
+struct SpanInstrumentedExpressions {
+    ident: Ident,
+}
+
 impl Fold for SpanInstrumentedExpressions {
     fn fold_block(&mut self, block: Block) -> Block {
         let block_span = block.span();
@@ -82,15 +90,16 @@ impl Fold for SpanInstrumentedExpressions {
                 };
 
                 let (lit, args) = args::split(lit);
+                let span_name = format!("{}::comment", self.ident);
 
                 let span = match args {
                     Some(args) => {
                         quote_spanned! { lit.span() =>
-                            tracing::span!(target: "spandoc", tracing::Level::ERROR, "comment", text = %#lit, #args)
+                            tracing::span!(tracing::Level::ERROR, #span_name, text = %#lit, #args)
                         }
                     },
                     None => quote_spanned! { lit.span() =>
-                        tracing::span!(target: "spandoc", tracing::Level::ERROR, "comment", text = %#lit)
+                        tracing::span!(tracing::Level::ERROR, #span_name, text = %#lit)
                     },
                 };
 
