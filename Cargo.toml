@@ -22,12 +22,14 @@ edition = "2018"
 proc-macro = true
 
 [dependencies]
-syn = { version = "^1.0.13", features = ["full", "extra-traits", "fold"] }
-quote = "1.0"
-proc-macro2 = "1.0"
+syn = { version = "1.0.14", features = ["full", "extra-traits", "fold"] }
+quote = "1.0.2"
+proc-macro2 = "1.0.8"
 matches = "0.1.8"
+tracing = "0.1.13"
+tracing-futures = "0.2.3"
 
 [dev-dependencies]
-tracing = { git = "https://github.com/yaahc/tokio-trace-nursery.git", branch = "eliza/error-sketch" }
-tracing-subscriber = { git = "https://github.com/yaahc/tokio-trace-nursery.git", branch = "eliza/error-sketch" }
-tracing-error = { git = "https://github.com/yaahc/tokio-trace-nursery.git", branch = "eliza/error-sketch" }
+tracing-error = "0.1.2"
+tracing-subscriber = { features = ["registry", "fmt"], version = "0.2.3" }
+trybuild = "1.0.24"

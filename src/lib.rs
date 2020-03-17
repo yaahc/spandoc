@@ -2,7 +2,7 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::quote_spanned;
-use syn::{fold::Fold, spanned::Spanned, Attribute, AttributeArgs, Block, ItemFn, LitStr, Meta};
+use syn::{fold::Fold, spanned::Spanned, Attribute, ExprAwait, AttributeArgs, Block, ItemFn, LitStr, Meta};
 
 #[proc_macro_attribute]
 pub fn spandoc(args: TokenStream, item: TokenStream) -> TokenStream {
@@ -31,6 +31,32 @@ pub fn spandoc(args: TokenStream, item: TokenStream) -> TokenStream {
 
 struct SpanInstrumentedExpressions;
 
+struct InstrumentAwaits<'a> {
+    did_work: &'a mut bool,
+}
+
+impl Fold for InstrumentAwaits<'_> {
+    fn fold_expr_await(&mut self, mut i: ExprAwait) -> ExprAwait {
+        let span = i.span();
+        let base = i.base;
+        let base = if *self.did_work {
+            quote_spanned! { span => compile_error!("spandoc does not support instrumenting multiple awaits with a single span") }
+        } else {
+            quote_spanned! { span =>
+                {
+                    use tracing_futures::Instrument as _;
+                    #base.instrument(__dummy_span)
+                }
+            }
+        };
+
+        let base = syn::parse2(base).unwrap();
+        i.base = Box::new(base);
+        *self.did_work = true;
+        i
+    }
+}
+
 impl Fold for SpanInstrumentedExpressions {
     fn fold_block(&mut self, block: Block) -> Block {
         let block_span = block.span();
@@ -56,14 +82,27 @@ impl Fold for SpanInstrumentedExpressions {
                 let lit = LitStr::new(lit.value().trim(), lit.span());
 
                 Some(quote_spanned! { stmt_span =>
-                    tracing::span!(tracing::Level::ERROR, "context", action = %#lit)
+                    tracing::span!(target: "spandoc", tracing::Level::ERROR, "comment", text = %#lit)
                 })
             };
 
             let attrs = attr::from_stmt(&mut stmt);
             let span = attrs.and_then(attr::find_doc).and_then(as_span);
 
+            let mut did_work = false;
+            let stmt = if span.is_some() {
+                InstrumentAwaits{ did_work: &mut did_work }.fold_stmt(stmt)
+            } else {
+                stmt
+            };
+
             let stmts = match span {
+                Some(span) if did_work => {
+                    quote_spanned! { stmt_span =>
+                        let __dummy_span = #span;
+                        #stmt
+                    }
+                }
                 Some(span) if i == last => {
                     quote_spanned! { stmt_span =>
                         let __dummy_span = #span;

@@ -1,0 +1,5 @@
+error: spandoc does not support instrumenting multiple awaits with a single span
+  --> $DIR/with_multi_await.rs:21:9
+   |
+21 |         fut3.await
+   |         ^^^^^^^^^^
