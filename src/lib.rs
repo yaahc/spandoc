@@ -2,7 +2,9 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::quote_spanned;
-use syn::{fold::Fold, spanned::Spanned, Attribute, ExprAwait, AttributeArgs, Block, ItemFn, LitStr, Meta};
+use syn::{
+    fold::Fold, spanned::Spanned, Attribute, AttributeArgs, Block, ExprAwait, ItemFn, Meta,
+};
 
 #[proc_macro_attribute]
 pub fn spandoc(args: TokenStream, item: TokenStream) -> TokenStream {
@@ -79,11 +81,20 @@ impl Fold for SpanInstrumentedExpressions {
                     _ => return None,
                 };
 
-                let lit = LitStr::new(lit.value().trim(), lit.span());
+                let (lit, args) = args::split(lit);
 
-                Some(quote_spanned! { stmt_span =>
-                    tracing::span!(target: "spandoc", tracing::Level::ERROR, "comment", text = %#lit)
-                })
+                let span = match args {
+                    Some(args) => {
+                        quote_spanned! { lit.span() =>
+                            tracing::span!(target: "spandoc", tracing::Level::ERROR, "comment", text = %#lit, #args)
+                        }
+                    },
+                    None => quote_spanned! { lit.span() =>
+                        tracing::span!(target: "spandoc", tracing::Level::ERROR, "comment", text = %#lit)
+                    },
+                };
+
+                Some(span)
             };
 
             let attrs = attr::from_stmt(&mut stmt);
@@ -91,7 +102,10 @@ impl Fold for SpanInstrumentedExpressions {
 
             let mut did_work = false;
             let stmt = if span.is_some() {
-                InstrumentAwaits{ did_work: &mut did_work }.fold_stmt(stmt)
+                InstrumentAwaits {
+                    did_work: &mut did_work,
+                }
+                .fold_stmt(stmt)
             } else {
                 stmt
             };
@@ -201,5 +215,91 @@ mod attr {
         let ind = attrs.iter().position(|attr| attr.path.is_ident("doc"));
 
         ind.map(|ind| attrs.remove(ind))
+    }
+}
+
+mod args {
+    use syn::LitStr;
+    use core::ops::Range;
+    use quote::quote_spanned;
+
+    pub fn split(lit: LitStr) -> (LitStr, Option<proc_macro2::TokenStream>) {
+        let text = lit.value();
+        let text = text.trim();
+
+        if let Some((text_range, args_range)) = get_ranges(text) {
+            let args = &text[args_range].trim();
+            let text = &text[text_range];
+            let span = lit.span();
+
+            let lit = LitStr::new(text, span);
+            let args: proc_macro2::TokenStream = args.parse().unwrap();
+
+            (lit, Some(quote_spanned! { span => #args }))
+        } else {
+            (lit, None)
+        }
+    }
+
+    fn get_ranges(text: &str) -> Option<(Range<usize>, Range<usize>)> {
+        let mut depth = 0;
+
+        if !text.ends_with('}') {
+            return None;
+        }
+
+        let chars = text.chars().collect::<Vec<_>>();
+        let len = chars.len();
+
+        for (ind, c) in chars.into_iter().enumerate().rev() {
+            match c {
+                '}' => depth += 1,
+                '{' => depth -= 1,
+                _ => (),
+            }
+
+            if depth == 0 {
+                let end = len - 1;
+                return Some((0..ind, ind+1..end));
+            }
+        }
+
+        None
+    }
+
+    #[cfg(test)]
+    pub fn split_str(text: &str) -> (&str, Option<&str>) {
+        match get_ranges(text) {
+            Some((text_range, args_range)) => {
+                let args = &text[args_range];
+                let text = &text[text_range].trim();
+
+                (text, Some(args))
+            },
+            _ => {
+                (text, None)
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn no_args() {
+        let input = "This doesn't have args";
+        let (text, args) = args::split_str(input);
+        assert_eq!(input, text);
+        assert_eq!(None, args);
+    }
+
+    #[test]
+    fn with_args() {
+        let input = "This doesn't have args {but, this, does}";
+        let (text, args) = args::split_str(input);
+        assert_eq!("This doesn't have args", text);
+        assert_eq!(Some("but, this, does"), args);
     }
 }

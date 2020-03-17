@@ -1,0 +1,7 @@
+error[E0425]: cannot find value `local` in this scope
+ --> $DIR/with_invalid_span_args.rs:1:1
+  |
+1 | #[spandoc::spandoc]
+  | ^^^^^^^^^^^^^^^^^^^ not found in this scope
+  |
+  = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)
