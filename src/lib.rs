@@ -1,11 +1,12 @@
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
+use proc_macro2::Ident;
 use quote::quote_spanned;
 use syn::{
-    fold::Fold, spanned::Spanned, Signature, Attribute, AttributeArgs, Block, ExprAwait, ItemFn, Meta,
+    fold::Fold, spanned::Spanned, Attribute, AttributeArgs, Block, ExprAsync, ExprAwait, ItemFn,
+    Meta, Signature,
 };
-use proc_macro2::Ident;
 
 #[proc_macro_attribute]
 pub fn spandoc(args: TokenStream, item: TokenStream) -> TokenStream {
@@ -21,12 +22,12 @@ pub fn spandoc(args: TokenStream, item: TokenStream) -> TokenStream {
         ..
     } = input;
 
-    let Signature {
-        ref ident,
-        ..
-    } = sig;
+    let Signature { ref ident, .. } = sig;
 
-    let block = SpanInstrumentedExpressions{ ident: ident.clone() }.fold_block(*block);
+    let block = SpanInstrumentedExpressions {
+        ident: ident.clone(),
+    }
+    .fold_block(*block);
 
     quote_spanned!( span =>
         #(#attrs) *
@@ -42,17 +43,19 @@ struct InstrumentAwaits<'a> {
 }
 
 impl Fold for InstrumentAwaits<'_> {
-    fn fold_expr_await(&mut self, mut i: ExprAwait) -> ExprAwait {
+    fn fold_expr_async(&mut self, i: ExprAsync) -> ExprAsync {
+        i
+    }
+
+    fn fold_expr_await(&mut self, i: ExprAwait) -> ExprAwait {
+        let mut i = syn::fold::fold_expr_await(self, i);
+
         let span = i.span();
         let base = i.base;
-        let base = if *self.did_work {
-            quote_spanned! { span => compile_error!("spandoc does not support instrumenting multiple awaits with a single span") }
-        } else {
-            quote_spanned! { span =>
-                {
-                    use tracing_futures::Instrument as _;
-                    #base.instrument(__dummy_span)
-                }
+        let base = quote_spanned! { span =>
+            {
+                use tracing_futures::Instrument as _;
+                #base.instrument(__dummy_span.clone())
             }
         };
 
@@ -97,7 +100,7 @@ impl Fold for SpanInstrumentedExpressions {
                         quote_spanned! { lit.span() =>
                             tracing::span!(tracing::Level::ERROR, #span_name, text = %#lit, #args)
                         }
-                    },
+                    }
                     None => quote_spanned! { lit.span() =>
                         tracing::span!(tracing::Level::ERROR, #span_name, text = %#lit)
                     },
@@ -228,9 +231,9 @@ mod attr {
 }
 
 mod args {
-    use syn::LitStr;
     use core::ops::Range;
     use quote::quote_spanned;
+    use syn::LitStr;
 
     pub fn split(lit: LitStr) -> (LitStr, Option<proc_macro2::TokenStream>) {
         let text = lit.value();
@@ -270,7 +273,7 @@ mod args {
 
             if depth == 0 {
                 let end = len - 1;
-                return Some((0..ind, ind+1..end));
+                return Some((0..ind, ind + 1..end));
             }
         }
 
@@ -285,10 +288,8 @@ mod args {
                 let text = &text[text_range].trim();
 
                 (text, Some(args))
-            },
-            _ => {
-                (text, None)
             }
+            _ => (text, None),
         }
     }
 }

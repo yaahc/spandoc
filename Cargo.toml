@@ -22,14 +22,14 @@ edition = "2018"
 proc-macro = true
 
 [dependencies]
-syn = { version = "1.0.14", features = ["full", "extra-traits", "fold"] }
-quote = "1.0.2"
-proc-macro2 = "1.0.8"
+syn = { version = "1.0.33", features = ["full", "extra-traits", "fold"] }
+quote = "1.0.7"
+proc-macro2 = "1.0.18"
 matches = "0.1.8"
-tracing = "0.1.13"
-tracing-futures = "0.2.3"
+tracing = "0.1.15"
+tracing-futures = "0.2.4"
 
 [dev-dependencies]
 tracing-error = "0.1.2"
-tracing-subscriber = { features = ["registry", "fmt"], version = "0.2.3" }
-trybuild = "1.0.24"
+tracing-subscriber = { features = ["registry", "fmt"], version = "0.2.6" }
+trybuild = "1.0.30"

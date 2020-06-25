@@ -1,5 +1,3 @@
-#![feature(backtrace)]
-
 use spandoc::spandoc;
 use tracing::instrument;
 use tracing_error::{ErrorLayer, SpanTrace};
@@ -34,7 +32,4 @@ fn main() {
 
     println!("Context:");
     println!("{}", ctx);
-
-    println!("Backtrace:");
-    println!("{}", std::backtrace::Backtrace::force_capture());
 }
