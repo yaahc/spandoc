@@ -21,7 +21,7 @@ edition = "2018"
 [dependencies]
 tracing = "0.1.15"
 tracing-futures = "0.2.4"
-spandoc-attribute = { path = "./spandoc-attribute" }
+spandoc-attribute = "=0.1.0"
 
 [dev-dependencies]
 tracing-error = "0.1.2"
