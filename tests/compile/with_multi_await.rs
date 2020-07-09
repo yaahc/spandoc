@@ -7,7 +7,7 @@ fn main() {
     };
 
     let fut2 = async {
-        /// do the thing
+        /// SPANDOC: do the thing
         fut.await
     };
 
@@ -15,9 +15,22 @@ fn main() {
         5usize
     };
 
-    /// this should fail
-    let fut4 = async {
+    /// SPANDOC: this shouldn't fail
+    let _fut4 = async {
         let _ = fut2.await;
         fut3.await
     };
+
+    let _fut5 = async {
+        let fut = async {
+            async {
+                4
+            }
+        };
+
+        /// SPANDOC: this should totally work!
+        let _four = fut.await.await;
+    };
+
+
 }

@@ -7,7 +7,7 @@ fn main() {
     };
 
     let _fut2 = async {
-        /// do the thing
+        /// SPANDOC: do the thing
         fut.await
     };
 }
