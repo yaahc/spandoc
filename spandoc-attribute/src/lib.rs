@@ -84,13 +84,13 @@ impl Fold for SpanInstrumentedExpressions {
                     _ => return None,
                 };
 
-                let (lit, args) = args::split(lit);
+                let (lit, args) = args::split(lit)?;
                 let span_name = format!("{}::comment", self.ident);
 
                 let span = match args {
                     Some(args) => {
                         quote_spanned! { lit.span() =>
-                            tracing::span!(tracing::Level::ERROR, #span_name, text = %#lit, #args)
+                            tracing::span!(tracing::Level::ERROR, #span_name, #args, text = %#lit)
                         }
                     }
                     None => quote_spanned! { lit.span() =>
@@ -101,10 +101,25 @@ impl Fold for SpanInstrumentedExpressions {
                 Some(span)
             };
 
-            let attrs = attr::from_stmt(&mut stmt);
-            let span = attrs.and_then(attr::find_doc).and_then(as_span);
+            let attrs = if let Some(attrs) = attr::from_stmt(&mut stmt) {
+                attrs
+            } else {
+                new_stmts.extend(quote_spanned! { stmt_span => #stmt });
+                continue;
+            };
+
+            let ind = if let Some(ind) = attr::find_doc_attr_ind(attrs) {
+                ind
+            } else {
+                new_stmts.extend(quote_spanned! { stmt_span => #stmt });
+                continue;
+            };
+
+            let attr = attrs[ind].clone();
+            let span = as_span(attr);
 
             let stmt = if span.is_some() {
+                attrs.remove(ind);
                 InstrumentAwaits.fold_stmt(stmt)
             } else {
                 stmt
@@ -205,34 +220,38 @@ mod attr {
         }
     }
 
-    pub(crate) fn find_doc(attrs: &mut Vec<Attribute>) -> Option<Attribute> {
-        let ind = attrs.iter().position(|attr| attr.path.is_ident("doc"));
-
-        ind.map(|ind| attrs.remove(ind))
+    pub(crate) fn find_doc_attr_ind(attrs: &mut Vec<Attribute>) -> Option<usize> {
+        attrs.iter().position(|attr| attr.path.is_ident("doc"))
     }
 }
 
 mod args {
     use core::ops::Range;
-    use quote::quote_spanned;
     use syn::LitStr;
 
-    pub fn split(lit: LitStr) -> (LitStr, Option<proc_macro2::TokenStream>) {
+    pub fn split(lit: LitStr) -> Option<(LitStr, Option<proc_macro2::TokenStream>)> {
         let text = lit.value();
         let text = text.trim();
         let span = lit.span();
+
+        let text = if !text.starts_with("SPANDOC: ") {
+            return None;
+        } else {
+            text.trim_start_matches("SPANDOC: ")
+        };
 
         if let Some((text_range, args_range)) = get_ranges(text) {
             let args = &text[args_range];
             let text = &text[text_range].trim();
 
             let lit = LitStr::new(text, span);
-            let args: proc_macro2::TokenStream = args.parse().unwrap();
+            let args = LitStr::new(args, span);
+            let args = args.parse().unwrap();
 
-            (lit, Some(quote_spanned! { span => #args }))
+            Some((lit, Some(args)))
         } else {
             let lit = LitStr::new(text, span);
-            (lit, None)
+            Some((lit, None))
         }
     }
 
