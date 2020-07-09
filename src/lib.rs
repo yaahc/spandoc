@@ -2,6 +2,7 @@ pub use spandoc_attribute::spandoc;
 use std::cell::Cell;
 use tracing_futures::Instrument;
 
+#[doc(hidden)]
 pub struct FancyGuard<'a> {
     span: &'a tracing::Span,
     entered: Cell<bool>,
@@ -36,35 +37,3 @@ impl Drop for FancyGuard<'_> {
         }
     }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-
-//     async fn test() -> Result<(), ()> {
-//         tracing::error!(
-//             "event in wrapped future, shouldn't include fancy span and should include boo hoo"
-//         );
-
-//         Ok(())
-//     }
-
-//     #[tokio::test]
-//     async fn it_works() {
-//         tracing_subscriber::fmt::init();
-
-//         let span = tracing::error_span!("fancy span");
-//         tracing::error!("outside of fancy guard");
-//         let guard = FancyGuard::new(&span);
-//         tracing::error!("inside of fancy guard");
-
-//         guard
-//             .wrap({
-//                 tracing::error!("this should happen inside of fancy guard");
-//                 test()
-//             })
-//             .await
-//             .map(|()| tracing::error!("back in fancy guard"))
-//             .unwrap_err();
-//     }
-// }
