@@ -7,7 +7,7 @@ fn main() {
     tracing_subscriber::fmt::init();
     let local = 4;
 
-    /// SPANDOC: Emit a tracing info event {?bar}
+    /// SPANDOC: Emit a tracing info event {?local}
     info!("event 1");
 
     info!("event 2");
