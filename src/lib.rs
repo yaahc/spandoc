@@ -99,6 +99,30 @@
 //!     make_liz().await.map(|()| info!("this will also be printed in the span"));
 //! }
 //! ```
+#![doc(html_root_url = "https://docs.rs/spandoc/0.2.0")]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![warn(
+    missing_docs,
+    missing_doc_code_examples,
+    rust_2018_idioms,
+    unreachable_pub,
+    bad_style,
+    const_err,
+    dead_code,
+    improper_ctypes,
+    non_shorthand_field_patterns,
+    no_mangle_generic_items,
+    overflowing_literals,
+    path_statements,
+    patterns_in_fns_without_body,
+    private_in_public,
+    unconditional_recursion,
+    unused,
+    unused_allocation,
+    unused_comparisons,
+    unused_parens,
+    while_true
+)]
 #![allow(clippy::needless_doctest_main)]
 use std::cell::Cell;
 use tracing_futures::Instrument;
@@ -113,6 +137,7 @@ pub struct FancyGuard<'a> {
 }
 
 impl<'a> FancyGuard<'a> {
+    #[doc(hidden)]
     pub fn new(span: &'a tracing::Span) -> FancyGuard<'a> {
         span.with_subscriber(|(id, sub)| sub.enter(id));
         Self {
@@ -121,6 +146,7 @@ impl<'a> FancyGuard<'a> {
         }
     }
 
+    #[doc(hidden)]
     pub async fn wrap<F>(&self, fut: F) -> F::Output
     where
         F: std::future::Future,

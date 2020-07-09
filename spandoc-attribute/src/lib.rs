@@ -1,4 +1,29 @@
-extern crate proc_macro;
+//! proc macro crate that implements the `#[spandoc::spandoc]` attribute. See
+//[`spandoc`](https://docs.rs/spandoc) documentation for details.
+#![doc(html_root_url = "https://docs.rs/spandoc-attribute/0.1.0")]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![warn(
+    missing_docs,
+    missing_doc_code_examples,
+    rust_2018_idioms,
+    unreachable_pub,
+    bad_style,
+    const_err,
+    dead_code,
+    improper_ctypes,
+    non_shorthand_field_patterns,
+    no_mangle_generic_items,
+    overflowing_literals,
+    path_statements,
+    patterns_in_fns_without_body,
+    private_in_public,
+    unconditional_recursion,
+    unused,
+    unused_allocation,
+    unused_comparisons,
+    unused_parens,
+    while_true
+)]
 
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
@@ -9,6 +34,7 @@ use syn::{
 };
 
 #[proc_macro_attribute]
+/// entrypoint for spandoc attribute proc macro
 pub fn spandoc(args: TokenStream, item: TokenStream) -> TokenStream {
     let input: ItemFn = syn::parse_macro_input!(item as ItemFn);
     let _args = syn::parse_macro_input!(args as AttributeArgs);
@@ -229,7 +255,7 @@ mod args {
     use core::ops::Range;
     use syn::LitStr;
 
-    pub fn split(lit: LitStr) -> Option<(LitStr, Option<proc_macro2::TokenStream>)> {
+    pub(crate) fn split(lit: LitStr) -> Option<(LitStr, Option<proc_macro2::TokenStream>)> {
         let text = lit.value();
         let text = text.trim();
         let span = lit.span();
