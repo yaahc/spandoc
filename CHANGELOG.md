@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- next-header -->
 
 ## [Unreleased] - ReleaseDate
+
+## [0.2.1] - 2020-11-11
 ### Fixed
 - Fixed compiler error when using `#[spandoc]` on functions containing an
   empty block

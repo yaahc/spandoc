@@ -39,11 +39,11 @@ search = "#!\\[doc\\(html_root_url.*"
 replace = "#![doc(html_root_url = \"https://docs.rs/{{crate_name}}/{{version}}\")]"
 exactly = 1
 
-# [[package.metadata.release.pre-release-replacements]]
-# file = "CHANGELOG.md"
-# search = "\\.\\.\\.HEAD"
-# replace="...{{tag_name}}"
-# exactly = 1
+[[package.metadata.release.pre-release-replacements]]
+file = "CHANGELOG.md"
+search = "\\.\\.\\.HEAD"
+replace="...{{tag_name}}"
+exactly = 1
 
 [[package.metadata.release.pre-release-replacements]]
 file = "CHANGELOG.md"
@@ -56,8 +56,8 @@ search="<!-- next-header -->"
 replace="<!-- next-header -->\n\n## [Unreleased] - ReleaseDate"
 exactly=1
 
-# [[package.metadata.release.pre-release-replacements]]
-# file="CHANGELOG.md"
-# search="<!-- next-url -->"
-# replace="<!-- next-url -->\n[Unreleased]: https://github.com/yaahc/{{crate_name}}/compare/{{tag_name}}...HEAD"
-# exactly=1
+[[package.metadata.release.pre-release-replacements]]
+file="CHANGELOG.md"
+search="<!-- next-url -->"
+replace="<!-- next-url -->\n[Unreleased]: https://github.com/yaahc/{{crate_name}}/compare/{{tag_name}}...HEAD"
+exactly=1
