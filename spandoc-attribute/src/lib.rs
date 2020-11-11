@@ -1,6 +1,6 @@
 //! proc macro crate that implements the `#[spandoc::spandoc]` attribute. See
 //[`spandoc`](https://docs.rs/spandoc) documentation for details.
-#![doc(html_root_url = "https://docs.rs/spandoc-attribute/0.1.0")]
+#![doc(html_root_url = "https://docs.rs/spandoc-attribute/0.1.1")]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(
     missing_docs,
