@@ -1,6 +1,6 @@
 [package]
 name = "spandoc"
-version = "0.2.0"
+version = "0.2.2-alpha.0"
 authors = [ "Jane Lusby <jlusby@yaah.dev>" ]
 repository = "https://github.com/yaahc/spandoc"
 homepage = "https://github.com/yaahc/spandoc"
@@ -21,9 +21,43 @@ edition = "2018"
 [dependencies]
 tracing = "0.1.15"
 tracing-futures = "0.2.4"
-spandoc-attribute = "=0.1.0"
+spandoc-attribute = { version = "=0.1.1", path = "./spandoc-attribute" }
 
 [dev-dependencies]
 tracing-error = "0.1.2"
 tracing-subscriber = { features = ["registry", "fmt"], version = "0.2.6" }
 trybuild = "1.0.30"
+
+[[package.metadata.release.pre-release-replacements]]
+file = "CHANGELOG.md"
+search = "Unreleased"
+replace="{{version}}"
+
+[[package.metadata.release.pre-release-replacements]]
+file = "src/lib.rs"
+search = "#!\\[doc\\(html_root_url.*"
+replace = "#![doc(html_root_url = \"https://docs.rs/{{crate_name}}/{{version}}\")]"
+exactly = 1
+
+[[package.metadata.release.pre-release-replacements]]
+file = "CHANGELOG.md"
+search = "\\.\\.\\.HEAD"
+replace="...{{tag_name}}"
+exactly = 1
+
+[[package.metadata.release.pre-release-replacements]]
+file = "CHANGELOG.md"
+search = "ReleaseDate"
+replace="{{date}}"
+
+[[package.metadata.release.pre-release-replacements]]
+file="CHANGELOG.md"
+search="<!-- next-header -->"
+replace="<!-- next-header -->\n\n## [Unreleased] - ReleaseDate"
+exactly=1
+
+[[package.metadata.release.pre-release-replacements]]
+file="CHANGELOG.md"
+search="<!-- next-url -->"
+replace="<!-- next-url -->\n[Unreleased]: https://github.com/yaahc/{{crate_name}}/compare/{{tag_name}}...HEAD"
+exactly=1

@@ -1,4 +1,12 @@
-//! Attribute macro that transforms doc comments in functions into tracing [`spans`](https://docs.rs/tracing/0.1.16/tracing/span/index.html).
+//! Attribute macro that transforms doc comments in functions into tracing
+//! [`spans`](https://docs.rs/tracing/0.1.16/tracing/span/index.html).
+//!
+//! Spandoc provides a function level attribute macro that converts doc !
+//! comments _within_ a function into tracing spans. These spans are entered
+//! before the annotated expression and exited immediately after. Spandoc is also
+//! async aware, so expressions that contain `.await`s will correctly instrument
+//! the future, exit before yielding, and enter the span again when the future
+//! resumes.
 //!
 //! # Details
 //!

@@ -1,6 +1,6 @@
 //! proc macro crate that implements the `#[spandoc::spandoc]` attribute. See
 //[`spandoc`](https://docs.rs/spandoc) documentation for details.
-#![doc(html_root_url = "https://docs.rs/spandoc-attribute/0.1.0")]
+#![doc(html_root_url = "https://docs.rs/spandoc-attribute/0.1.1")]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(
     missing_docs,
@@ -73,7 +73,6 @@ impl Fold for InstrumentAwaits {
 
     fn fold_expr_await(&mut self, i: ExprAwait) -> ExprAwait {
         let mut i = syn::fold::fold_expr_await(self, i);
-
         let span = i.span();
         let base = i.base;
         let base = quote_spanned! { span => __fancy_guard.wrap(#base) };
@@ -90,6 +89,10 @@ struct SpanInstrumentedExpressions {
 
 impl Fold for SpanInstrumentedExpressions {
     fn fold_block(&mut self, block: Block) -> Block {
+        if block.stmts.is_empty() {
+            return block;
+        }
+
         let block_span = block.span();
         let mut block = syn::fold::fold_block(self, block);
 

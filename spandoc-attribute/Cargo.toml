@@ -1,6 +1,6 @@
 [package]
 name = "spandoc-attribute"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Jane Lusby <jlusby@yaah.dev>"]
 edition = "2018"
 repository = "https://github.com/yaahc/spandoc"
@@ -27,3 +27,15 @@ proc-macro = true
 syn = { version = "1.0.33", features = ["full", "extra-traits", "fold"] }
 quote = "1.0.7"
 proc-macro2 = "1.0.18"
+
+[[package.metadata.release.pre-release-replacements]]
+file = "../Cargo.toml"
+search = "spandoc-attribute = .*"
+replace = "spandoc-attribute = { version = \"={{version}}\", path = \"./spandoc-attribute\" }"
+exactly = 1
+
+[[package.metadata.release.pre-release-replacements]]
+file = "src/lib.rs"
+search = "#!\\[doc\\(html_root_url.*"
+replace = "#![doc(html_root_url = \"https://docs.rs/{{crate_name}}/{{version}}\")]"
+exactly = 1
