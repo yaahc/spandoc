@@ -111,7 +111,7 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(
     missing_docs,
-    missing_doc_code_examples,
+    rustdoc::missing_doc_code_examples,
     rust_2018_idioms,
     unreachable_pub,
     bad_style,
@@ -132,7 +132,8 @@
     while_true
 )]
 #![allow(clippy::needless_doctest_main)]
-use std::cell::Cell;
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use tracing_futures::Instrument;
 
 /// Attribute macro that transforms doc comments in functions into tracing [`spans`](https://docs.rs/tracing/0.1.16/tracing/span/index.html).
@@ -141,7 +142,7 @@ pub use spandoc_attribute::spandoc;
 #[doc(hidden)]
 pub struct FancyGuard<'a> {
     span: &'a tracing::Span,
-    entered: Cell<bool>,
+    entered: AtomicBool,
 }
 
 impl<'a> FancyGuard<'a> {
@@ -150,7 +151,7 @@ impl<'a> FancyGuard<'a> {
         span.with_subscriber(|(id, sub)| sub.enter(id));
         Self {
             span,
-            entered: Cell::new(true),
+            entered: AtomicBool::new(true),
         }
     }
 
@@ -160,17 +161,17 @@ impl<'a> FancyGuard<'a> {
         F: std::future::Future,
     {
         self.span.with_subscriber(|(id, sub)| sub.exit(id));
-        self.entered.set(false);
+        self.entered.store(false, Ordering::Relaxed);
         let output = fut.instrument(self.span.clone()).await;
         self.span.with_subscriber(|(id, sub)| sub.enter(id));
-        self.entered.set(true);
+        self.entered.store(true, Ordering::Relaxed);
         output
     }
 }
 
 impl Drop for FancyGuard<'_> {
     fn drop(&mut self) {
-        if self.entered.get() {
+        if self.entered.load(Ordering::Relaxed) {
             self.span.with_subscriber(|(id, sub)| sub.exit(id));
         }
     }
