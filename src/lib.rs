@@ -92,6 +92,10 @@
 //! }
 //!
 //! async fn liz() -> Result<(), ()> {
+//!     # let span = tracing::Span::current();
+//!     # let metadata = span.metadata().expect("span should have metadata");
+//!     # assert_eq!(metadata.name(), "clever_girl::comment");
+//!     #
 //!     info!("this will also be printed in the span from `clever_girl`");
 //!
 //!     // return a result so we can call map outside of the scope of the future
@@ -103,9 +107,12 @@
 //!     // This span will be entered before the await, exited correctly when the
 //!     // future suspends, and instrument the future returned from `liz` with
 //!     // `tracing-futures`
-//!     /// clever_girl async span
+//!     /// SPANDOC: clever_girl async span
 //!     make_liz().await.map(|()| info!("this will also be printed in the span"));
 //! }
+//! #
+//! # tracing_subscriber::fmt::init();
+//! # futures::executor::block_on(clever_girl());
 //! ```
 #![doc(html_root_url = "https://docs.rs/spandoc/0.2.0")]
 #![cfg_attr(docsrs, feature(doc_cfg))]

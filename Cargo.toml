@@ -24,6 +24,7 @@ tracing-futures = "0.2.4"
 spandoc-attribute = { version = "=0.1.1", path = "./spandoc-attribute" }
 
 [dev-dependencies]
+futures = { version = "0.3.21", features = ["executor"], default-features = false }
 tracing-error = "0.1.2"
 tracing-subscriber = { features = ["registry", "fmt"], version = "0.2.6" }
 trybuild = "1.0.30"

@@ -108,7 +108,7 @@ async fn clever_girl() {
     // This span will be entered before the await, exited correctly when the
     // future suspends, and instrument the future returned from `liz` with
     // `tracing-futures`
-    /// clever_girl async span
+    /// SPANDOC: clever_girl async span
     make_liz().await.map(|()| info!("this will also be printed in the span"));
 }
 ```
