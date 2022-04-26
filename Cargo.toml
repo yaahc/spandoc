@@ -1,6 +1,6 @@
 [package]
 name = "spandoc"
-version = "0.2.2-alpha.0"
+version = "0.2.2"
 authors = [ "Jane Lusby <jlusby@yaah.dev>" ]
 repository = "https://github.com/yaahc/spandoc"
 homepage = "https://github.com/yaahc/spandoc"
