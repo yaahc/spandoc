@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- next-header -->
 
 ## [Unreleased] - ReleaseDate
+### Fixed
+- Update internal `FancyGuard` type to use atomics rather than `Cell` to ensure
+  that futures using spandoc remain `Send`
 
 ## [0.2.1] - 2020-11-11
 ### Fixed
