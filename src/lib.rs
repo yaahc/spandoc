@@ -114,7 +114,7 @@
 //! # tracing_subscriber::fmt::init();
 //! # futures::executor::block_on(clever_girl());
 //! ```
-#![doc(html_root_url = "https://docs.rs/spandoc/0.2.0")]
+#![doc(html_root_url = "https://docs.rs/spandoc/0.2.2")]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(
     missing_docs,

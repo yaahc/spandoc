@@ -8,11 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.2.2] - 2022-04-26
+### Fixed
+- Update internal `FancyGuard` type to use atomics rather than `Cell` to ensure
+  that futures using spandoc remain `Send`
+
 ## [0.2.1] - 2020-11-11
 ### Fixed
 - Fixed compiler error when using `#[spandoc]` on functions containing an
   empty block
 
 <!-- next-url -->
-[Unreleased]: https://github.com/yaahc/spandoc/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/yaahc/spandoc/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/yaahc/spandoc/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/yaahc/spandoc/releases/tag/v0.2.1
